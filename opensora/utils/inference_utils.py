@@ -42,10 +42,13 @@ def get_save_path_name(
     prompt_as_path=False,  # use prompt as path
     num_sample=1,  # number of samples to generate for one prompt
     k=None,  # kth sample
+    customize_filename=None,
 ):
     if sample_name is None:
         sample_name = "" if prompt_as_path else "sample"
     sample_name_suffix = prompt if prompt_as_path else f"_{sample_idx:04d}"
+    if customize_filename is not None:
+        sample_name_suffix += "_" + customize_filename
     save_path = os.path.join(save_dir, f"{sample_name}{sample_name_suffix}")
     if num_sample != 1:
         save_path = f"{save_path}-{k}"
@@ -173,6 +176,8 @@ def find_nearest_point(value, point, max_value):
 
 
 def apply_mask_strategy(z, refs_x, mask_strategys, loop_i, align=None):
+    # print(f"Nat: apply_mask_strategy arguments: {locals()}")
+    # dtype=torch.bfloat16), 'refs_x': [[]], 'mask_strategys': [''], 'loop_i': 0, 'align': 5
     masks = []
     no_mask = True
     for i, mask_strategy in enumerate(mask_strategys):
@@ -205,6 +210,7 @@ def apply_mask_strategy(z, refs_x, mask_strategys, loop_i, align=None):
 
 
 def append_generated(vae, generated_video, refs_x, mask_strategy, loop_i, condition_frame_length, condition_frame_edit):
+    print(f"Nat: append_generated arguments: {locals()}")
     ref_x = vae.encode(generated_video)
     for j, refs in enumerate(refs_x):
         if refs is None:

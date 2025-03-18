@@ -1,0 +1,2 @@
+Requirement already satisfied: triton in /home/stud/ghuang/miniconda3/envs/opensora_clone/lib/python3.9/site-packages (3.0.0)
+Requirement already satisfied: filelock in /home/stud/ghuang/miniconda3/envs/opensora_clone/lib/python3.9/site-packages (from triton) (3.16.1)
