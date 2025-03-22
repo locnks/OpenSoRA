@@ -24,7 +24,7 @@ import xformers.ops
 from einops import rearrange
 from timm.models.vision_transformer import Mlp
 from opensora.models.layers.fope_paper import get_fope_paper_fourier_embedding, get_fope_paper_rotary_embedding
-
+from opensora.models.layers.riflex_paper import get_1d_rotary_pos_embed_riflex
 from opensora.acceleration.communications import all_to_all, split_forward_gather_backward
 from opensora.acceleration.parallel_states import get_sequence_parallel_group
 
@@ -208,18 +208,29 @@ class Attention(nn.Module):
                 # torch.Size([7200, 16, 30, 72]) torch.Size([7200, 16, 30, 72])
                 # q = self.rotary_emb(q)
                 # k = self.rotary_emb(k)
+                
+                # print(q.shape, k.shape)
+                # q = get_fope_paper_rotary_embedding(q)
+                # k = get_fope_paper_rotary_embedding(k)
 
-                with open("/home/stud/ghuang/Open-Sora/causal_mask_ratio", "r") as f:
-                    content = f.read()
-                    content = content.split('-=-')
-                    embedding_type = content[4]
+                q = get_fope_paper_fourier_embedding(q)
+                k = get_fope_paper_fourier_embedding(k)
 
-                if embedding_type == "rope":
-                    q = get_fope_paper_rotary_embedding(q)
-                    k = get_fope_paper_rotary_embedding(k)
-                else:
-                    q = get_fope_paper_fourier_embedding(q)
-                    k = get_fope_paper_fourier_embedding(k)
+                # freqs_array = get_1d_rotary_pos_embed_riflex(72, q.shape[2], 10000, True, None, None)
+                # q = self.rotary_emb(q, freqs_array=freqs_array)
+                # k = self.rotary_emb(k, freqs_array=freqs_array)
+
+                # with open("/home/stud/ghuang/Open-Sora/causal_mask_ratio", "r") as f:
+                #     content = f.read()
+                #     content = content.split('-=-')
+                #     embedding_type = content[4]
+
+                # if embedding_type == "rope":
+                #     q = get_fope_paper_rotary_embedding(q)
+                #     k = get_fope_paper_rotary_embedding(k)
+                # else:
+                #     q = get_fope_paper_fourier_embedding(q)
+                #     k = get_fope_paper_fourier_embedding(k)
 
         if enable_flash_attn: # spatial block is using flash attention
             from flash_attn import flash_attn_func
@@ -283,9 +294,10 @@ class Attention(nn.Module):
                 attn += causal_mask
             # print(attn.shape)
             # torch.Size([7200, 16, 30, 30])
-            temporal_causal_mask = torch.full((7200, 16, 30, 30), float('-inf'), dtype=torch.bfloat16, device="cuda")
-            temporal_causal_mask[:, :, :15, :15] = 0
-            temporal_causal_mask[:, :, 15:, 15:] = 0
+            temporal_causal_mask = torch.full(attn.shape, float('-inf'), dtype=torch.bfloat16, device="cuda")
+            td = attn.shape[2]
+            temporal_causal_mask[:, :, :td // 2, :td // 2] = 0
+            temporal_causal_mask[:, :, td // 2:, td // 2:] = 0
             # add fusion mask
             # leakage mask
             # temporal_causal_mask[:, :, 16:, :15] = 0
@@ -309,7 +321,7 @@ class Attention(nn.Module):
             # temporal_causal_mask[:, :, 10:15, 15:25] = 0
 
             # enable temporal causal mask
-            attn += temporal_causal_mask
+            # attn += temporal_causal_mask
 
             attn = attn.softmax(dim=-1)
             attn = attn.to(dtype)  # cast back attn to original dtype
@@ -604,7 +616,7 @@ class MultiHeadCrossAttention(nn.Module):
                 else:
                     if denoising_step < denoising_step_ratio * 30:
                         attn_bias = xformers.ops.fmha.BlockDiagonalMask.from_seqlens([N] * B, mask)
-            # attn_bias = xformers.ops.fmha.BlockDiagonalMask.from_seqlens([N] * B, mask)
+            attn_bias = xformers.ops.fmha.BlockDiagonalMask.from_seqlens([N] * B, mask)
             # print(f"N={N}, B={B}, mask={mask}") # the mask shape is token_lenght//2
             # N=108000, B=2, mask=[16, 16]
             # print(f"q={q.shape}, k={k.shape}, v={v.shape}")
@@ -654,9 +666,12 @@ class MultiHeadCrossAttention(nn.Module):
             return attn
         # attention.shape torch.Size([1, 16, 216000, 32])
 
-        attention = calculate_attention(q, k, attn_bias, self.attn_drop.p)
-        attention = attention[0]
-        attention = attention.mean(dim=0)
+        # -=- uncomment this to calculate intermediate attention
+        # attention = calculate_attention(q, k, attn_bias, self.attn_drop.p)
+        # attention = attention[0]
+        # attention = attention.mean(dim=0)
+
+
         # with open("/home/stud/ghuang/Open-Sora/tmp", "r") as f:
         #     content = f.read()
         #     content = content.split("-")

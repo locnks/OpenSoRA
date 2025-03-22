@@ -62,8 +62,8 @@ class RFLOW:
             conditions = content[1].split(',')
             temporal, spatial, experiment = self.get_bool(conditions[0]), self.get_bool(conditions[1]), self.get_bool(conditions[2])
 
-        denosing_step_different_embeddings_experiment = experiment
-        split_event_embedding_experiment = True
+        denosing_step_different_embeddings_experiment = False
+        split_event_embedding_experiment = False
         if denosing_step_different_embeddings_experiment:
             print("Using different text embeddings for previous x denosing steps...")
             #"""
