@@ -123,11 +123,17 @@ class T5Embedder:
 
         input_ids = text_tokens_and_mask["input_ids"].to(self.device)
         attention_mask = text_tokens_and_mask["attention_mask"].to(self.device)
+        tokens_splits = self.tokenizer.convert_ids_to_tokens(input_ids[0])
+        print(f"Nat: texts={texts}, splits={tokens_splits}")
         with torch.no_grad():
             text_encoder_embs = self.model(
                 input_ids=input_ids,
                 attention_mask=attention_mask,
             )["last_hidden_state"].detach()
+        # print(f"Nat: the texts {texts} text_encoder_embs {text_encoder_embs.shape} attention_mask {attention_mask.shape}")
+        # Nat: the texts ['a boy is running on the beach. aesthetic score: 6.5.'] text_encoder_embs torch.Size([1, 300, 4096]) attention_mask torch.Size([1, 300])
+        # the 300 is the max length. And the attention is a tensor indicating which tokens are actual input (1) and which are padding (0).
+        # the max length can be used to get standarized text embedding inputs
         return text_encoder_embs, attention_mask
 
 
@@ -189,6 +195,9 @@ class T5Encoder:
     def encode(self, text):
         caption_embs, emb_masks = self.t5.get_text_embeddings(text)
         caption_embs = caption_embs[:, None]
+        # here the None will cause a new dimension to be inserted
+        # the : means the batch dimension, and the None means insert a new dimension after the batch dimension
+        # so the new dimension would be (batch_size, 1, max_token_length, embedding_dimension)
         return dict(y=caption_embs, mask=emb_masks)
 
     def null(self, n):

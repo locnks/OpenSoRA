@@ -1,0 +1,522 @@
+[
+    {
+        "prompts": "A person is sitting on the sofa holding a book. Then, standing and walking into the kitchen, the person begins to fix himself a sandwich.",
+        "index": 349,
+        "category": "bed_book_chair_dish_doorway_food_sandwich_sofa"
+    },
+    {
+        "prompts": "A person is seen playing on their phone with a book in their hand. They close their phone and then pick up a bag.",
+        "index": 957,
+        "category": "bag_book_hand_phone"
+    },
+    {
+        "prompts": "A person is putting a towel on a towel rack.  Then a person is grasping a phone.",
+        "index": 1499,
+        "category": "phone_towel"
+    },
+    {
+        "prompts": "A person starts sneezing into their phone, then the person starts pouring a drink on a table.",
+        "index": 1277,
+        "category": "closet_cabinet_door_glass_groceries_milk_pantry_refrigerator"
+    },
+    {
+        "prompts": "A person is lying down on their sofa, snuggling a pillow. Another person is sitting in a chair beside them, eating food out of a bag.",
+        "index": 1556,
+        "category": "bag_chair_food_pillow_sofa"
+    },
+    {
+        "prompts": "A person turns on the light to an entryway and are seen throwing shoes on the floor.  They grab a glass of water and are then seen closing a door.",
+        "index": 1050,
+        "category": "clothes_cup_dish_door_floor_glass_light_shoe"
+    },
+    {
+        "prompts": "A person is seen on their laptop. They take some medicine and then take a drink of water after sneezing.",
+        "index": 1306,
+        "category": "chair_cup_glass_bottle_desk_medicine_pillow_table_water"
+    },
+    {
+        "prompts": "A person is in the hallway watching some video on their phone. They have a towel in the other hand that they are grasping, and decide to begin throwing it down the stairs.",
+        "index": 382,
+        "category": "floor_phone_towel"
+    },
+    {
+        "prompts": "A person is opening a cabinet in the laundry room. They grab an object and begin walking out of the laundry room. As the person is walking out, they pick up their phone out of their pocket and answer it.",
+        "index": 584,
+        "category": "bag_cabinet_door_phone_shelf"
+    },
+    {
+        "prompts": "A person is smiling in a study holding a bag, and a glass of milk. The person starts laughing.",
+        "index": 1797,
+        "category": "bag_cup_glass"
+    },
+    {
+        "prompts": "A person is washing a closet door and laughing at their laptop.",
+        "index": 1231,
+        "category": "door_laptop_towel"
+    },
+    {
+        "prompts": "A person is seen lying their head on a table. The look at their phone and begin laughing. They then turn on a nearby television.",
+        "index": 1565,
+        "category": "chair_head_phone_table_television"
+    },
+    {
+        "prompts": "One person is in the doorway of the closet pouring and then drinking medicine.",
+        "index": 836,
+        "category": "bottle_doorway_medicine"
+    },
+    {
+        "prompts": "A person walks over to a chair and sneezes. Another person walks over to the chair while carrying a camera.",
+        "index": 1774,
+        "category": "camera_chair_doorway_paper_notebook_phone_sofa_couch"
+    },
+    {
+        "prompts": "A person is working on their laptop at the kitchen table, eating a plate of food. The person takes a glass of water from nearby and drinks.",
+        "index": 809,
+        "category": "chair_cup_dishes_food_glass_laptop_table_water"
+    },
+    {
+        "prompts": "One person is standing next to a table, while a other person is taking groceries off the table.",
+        "index": 1489,
+        "category": "bag_box_dish_doorway_dresser_food_groceries_tray"
+    },
+    {
+        "prompts": "A person is sitting at the dining room table watching a video on their phone. The person stands while laughing and grabs the dishes from the table. The person walks toward the kitchen, but stops in the doorway to finish the video.",
+        "index": 1144,
+        "category": "chair_dish_doorway_phone_table_video"
+    },
+    {
+        "prompts": "A person turns on a television and opens a refrigerator and begins smiling while eating some leftovers from a take-out carton.",
+        "index": 1713,
+        "category": "dish_doorway_food_refrigerator_television"
+    },
+    {
+        "prompts": "A person is drinking a cup of coffee while another person is standing with a box of clothes.",
+        "index": 243,
+        "category": "blanket_box_clothes_coffee_cup_towel"
+    },
+    {
+        "prompts": "A person is sneezing by the door then grasps a allergy medicine bottle under the light.",
+        "index": 523,
+        "category": "cup_glass_bottle_medicine"
+    },
+    {
+        "prompts": "A person is standing and holding a box. Then, laughing, the person walks over to the sofa and sits down.",
+        "index": 555,
+        "category": "box_chair_sofa"
+    },
+    {
+        "prompts": "One person opens, then closes a window. Another person is drinking coffee and laughing with a phone in hand.",
+        "index": 1243,
+        "category": "coffee_cup_dish_phone_window"
+    },
+    {
+        "prompts": "A person is undressing while looking out the window. Then, putting their pants on top of their desk, the person reaches to take a drink from their mug of coffee.",
+        "index": 662,
+        "category": "clothes_coffee_cup_desk_dish_table_window"
+    },
+    {
+        "prompts": "A person is in a kitchen tidying up with a broom, they then start eating some food from the stove.",
+        "index": 765,
+        "category": "broom_floor_food_pan_stove"
+    },
+    {
+        "prompts": "A person in the garage is working with a vacuum and starts walking with a box towards the door.",
+        "index": 1703,
+        "category": "box_door_floor_phone_vacuum"
+    },
+    {
+        "prompts": "One person opens a bag, find shoes by the doorway and puts them inside, then closes the bag.",
+        "index": 51,
+        "category": "bag_clothes_floor_shoe"
+    },
+    {
+        "prompts": "A person is throwing a blanket in the hamper.  The person is then sneezing in front of the sink.",
+        "index": 641,
+        "category": "blanket_clothes_hands_laundry_basket_sink_towel_water"
+    },
+    {
+        "prompts": "A person walking into a walk-in closet holding a phone.  They start tidying up clothes when the pick up a picture and smile.",
+        "index": 1095,
+        "category": "book_closet_clothes_door_phone_picture"
+    },
+    {
+        "prompts": "One person runs in past the chair and window, grasps the cabinet door while drinking, then leaves.",
+        "index": 933,
+        "category": "bottle_closet_door_water"
+    },
+    {
+        "prompts": "Person A is in a kitchen clearing a table of dirty plates.  Person A grasps the plates and takes them to the sink and begins washing the plates.",
+        "index": 1551,
+        "category": "dish_food_sink_table"
+    },
+    {
+        "prompts": "A person enters the living room with a towel and a vacuum.  The person sneezes twice, inadvertently using the towel to catch the sneeze like a tissue.  The person then throws the towel onto the couch and plugs in the vacuum.",
+        "index": 560,
+        "category": "blanket_broom_chair_clothes_floor_towel_vacuum"
+    },
+    {
+        "prompts": "A person is watching out the window. Then, sneezing, the person picks up a towel and wipes their nose with it.",
+        "index": 1824,
+        "category": "bed_towel_window"
+    },
+    {
+        "prompts": "A person awakens from a deep sleep. They flip on a nightstand light, look at a wall clock, then flip the light off. They snuggle back into their blanket, going back to sleep.",
+        "index": 1014,
+        "category": "bed_blanket_clothes_door_light_pillow"
+    },
+    {
+        "prompts": "A person is holding the door to the refrigerator open. They pull a glass bowl of fruit out of the refrigerator. After closing the door, they begin eating the fruit.",
+        "index": 821,
+        "category": "dish_door_food_glass_groceries_refrigerator"
+    },
+    {
+        "prompts": "A person in their dining room is holding a pillow while watching some video on their laptop.",
+        "index": 180,
+        "category": "chair_laptop_pillow_table"
+    },
+    {
+        "prompts": "A person is standing in the entryway holding a laptop and trying to turn a doorknob.",
+        "index": 965,
+        "category": "door_laptop"
+    },
+    {
+        "prompts": "A person can dress in front of a mirror in their man cave, A person can hold a camera in their man cave.",
+        "index": 341,
+        "category": "clothes_mirror"
+    },
+    {
+        "prompts": "By the window, one person watches as another lies on the floor trying to fix a broken vacuum cleaner.",
+        "index": 1748,
+        "category": "floor_vacuum_window"
+    },
+    {
+        "prompts": "A person undresses by taking off a jacket. Next the person takes a blanket from a cabinet and begin snuggling with it.",
+        "index": 1160,
+        "category": "blanket_clothes_couch_drawer_jacket_shirt_sofa_table"
+    },
+    {
+        "prompts": "One person at a sofa opens a box and puts a camera into it. Then this person holds the box and smiles.",
+        "index": 1320,
+        "category": "box_camera_chair_floor_phone_sofa"
+    },
+    {
+        "prompts": "A person is seen grabbing dishes off their desk. They put the dishes down and take out their phone. Laughing as they play a game.",
+        "index": 558,
+        "category": "chair_computer_dish_floor_food_laptop_phone_sandwich_table"
+    },
+    {
+        "prompts": "A person is standing in their living room and starts sneezing. They walk over to a cabinet, and take a book from it. They walk over to the couch with the book and start reading it.",
+        "index": 1394,
+        "category": "book_broom_cabinet_phone_sofa"
+    },
+    {
+        "prompts": "One person walks past a desk with a broom, works at cleaning for a bit, then takes a glass from the desk.",
+        "index": 1043,
+        "category": "broom_cup_floor_glass_table"
+    },
+    {
+        "prompts": "A person is throwing a book to another person.  The other person blocks it with a table and laughs.",
+        "index": 1262,
+        "category": "bed_book_clothes_doorway_floor_table"
+    },
+    {
+        "prompts": "A person takes dishes off a shelf then starts drinking some water.",
+        "index": 97,
+        "category": "cabinet_cup_dish_door_glass_shelf"
+    },
+    {
+        "prompts": "One person throws down some homework, then takes a vacuum from the closet and leaves.",
+        "index": 1196,
+        "category": "doorway_floor_paper_shelf"
+    },
+    {
+        "prompts": "A person turns on the light and starts undressing. They look into the mirror and begin to laugh.",
+        "index": 750,
+        "category": "bed_clothes_cloths_doorway_jacket_light_mirror"
+    },
+    {
+        "prompts": "A person walks into the living room, holding some food on some dishes. The person throws some papers aside on the table, then sets the dishes down.",
+        "index": 770,
+        "category": "book_chair_dish_food_plate_sofa_table"
+    },
+    {
+        "prompts": "A person is eating a sandwich as they get ready in the bathroom. The person throws the sandwich aside and takes a picture in the mirror with a camera.",
+        "index": 1071,
+        "category": "camera_food_mirror_picture_sandwich"
+    },
+    {
+        "prompts": "a person walks past a television while grasping shoes in their hand, then sits down.",
+        "index": 1314,
+        "category": "bag_chair_hand_shoe_table_television"
+    },
+    {
+        "prompts": "A person sits in the basement, folding a bag of towels. The person sniffs a towel, then sneezes violently.",
+        "index": 32,
+        "category": "bag_blanket_clothes_floor_towel"
+    },
+    {
+        "prompts": "A person in their closet is undressing by taking their jacket off. They begin pouring some medicine into a small cup. Afterwards, they hold the medicine up to a mirror.",
+        "index": 1557,
+        "category": "chair_clothes_coat_glass_medicine_shelf"
+    },
+    {
+        "prompts": "A person is eating while holding a picture and watching something out the window.",
+        "index": 1427,
+        "category": "dish_food_picture_plate_sandwich_window"
+    },
+    {
+        "prompts": "A person cooks a sandwich on a panini maker. The person then sneezes before picking up their phone.",
+        "index": 1190,
+        "category": "food_phone_sandwich_window"
+    },
+    {
+        "prompts": "The person was standing while eating at the table.  Afterward the same person was taking the food to the stove.",
+        "index": 1238,
+        "category": "dish_doorway_food_sandwich_stove_table"
+    },
+    {
+        "prompts": "A person, on the bed, is smiling while closing the laptop. Then taking a bagel from the box begins eating breakfast in bed.",
+        "index": 170,
+        "category": "bed_box_chair_floor_food_laptop"
+    },
+    {
+        "prompts": "A person is grasping a cup of coffee in a recreation room. The person is walking toward the doorway.",
+        "index": 1622,
+        "category": "cup_dish_door_window"
+    },
+    {
+        "prompts": "A person washes their hands in the bathroom sink, then opens a cabinet door and places clothes inside.",
+        "index": 968,
+        "category": "cabinet_clothes_door_hand_sink_towel_water"
+    },
+    {
+        "prompts": "A person walks through the doorway, smiling. The person checks their phone.",
+        "index": 1611,
+        "category": "clothes_door_phone"
+    },
+    {
+        "prompts": "While tidying their office, a person straightened a picture on the wall, then picked up their clothes and began getting dressed.",
+        "index": 1559,
+        "category": "books_closet_cabinet_clothes_picture_shelf_sweater_sweatshirt_wall"
+    },
+    {
+        "prompts": "In the entryway, a person is standing with a blanket and is holding a glass.",
+        "index": 1855,
+        "category": "blanket_clothes_cup_glass_jacket_towel_water"
+    },
+    {
+        "prompts": "A person is seen playing with a camera. They look at a picture and start pouring themselves a glass of water.",
+        "index": 680,
+        "category": "bottle_cup_dish_glass_water_camera_phone_picture_sofa"
+    },
+    {
+        "prompts": "A person is washing the wall.  Then a person is holding a blanket and turning off the light.",
+        "index": 603,
+        "category": "blanket_light_towel_wall"
+    },
+    {
+        "prompts": "A person walking into a bathroom is grasping a laptop. They place it in the sink as the walk towards the toilet.",
+        "index": 804,
+        "category": "doorway_laptop_sink"
+    },
+    {
+        "prompts": "A person is talking on their phone laughing uncontrollably while standing next to a door. They bend over and begin rapidly licking the doorknob.",
+        "index": 1019,
+        "category": "door_phone"
+    },
+    {
+        "prompts": "One person tidies up the stove and refrigerator, then walks out.",
+        "index": 1533,
+        "category": "closet_cabinet_cup_dish_door_refrigerator_shelf_stove"
+    },
+    {
+        "prompts": "A person walks in with another person, holding some groceries, laughing and chatting.  One of the people pose, while the other takes a picture with their camera.  The person who had the picture taken of them leaves.",
+        "index": 1290,
+        "category": "bag_camera_groceries_phone_picture"
+    },
+    {
+        "prompts": "a person walks into closet opens laptop stands on a book fixing hair",
+        "index": 441,
+        "category": "closet_door_hair_laptop_wardrobe"
+    },
+    {
+        "prompts": "A person is snuggling, and then watching  themself in a mirror, and finally eating a sandwich in a living room.",
+        "index": 1810,
+        "category": "chair_dish_food_mirror_pillow_sandwich_sofa"
+    },
+    {
+        "prompts": "A person working in their recreation room snuggles a stuffed animal.  They stretch their arms, and get up. Tidying the area around them, they pick up some dishes, one with part of a sandwich, and head out of the room.",
+        "index": 134,
+        "category": "dish_floor_food_head_paper_notebook_sandwich"
+    },
+    {
+        "prompts": "A person awakens on a sofa with a pillow and blanket. They get up and get dressed and leave.",
+        "index": 1512,
+        "category": "blanket_pillow_sofa"
+    },
+    {
+        "prompts": "A person is sitting at a desk, working through an important work product. Another person walks in, holding a bag of groceries.",
+        "index": 1424,
+        "category": "bag_chair_desk_door_homework_paper_table"
+    },
+    {
+        "prompts": "A person is standing in the doorway looking into their bedroom and noticing that a blanket belonging on the bed has fallen on the floor.  The person laughs briefly before picking it up, laying it down on the bed, and then sitting on the bed themselves.",
+        "index": 143,
+        "category": "bed_blanket_doorway_floor"
+    },
+    {
+        "prompts": "A person laughs as they stand on the stairs, looking at a picture on the wall. The person takes out a bottle of medicine and takes some.",
+        "index": 1665,
+        "category": "cup_glass_bottle_food_medicine_window"
+    },
+    {
+        "prompts": "Person opens turns doorknob and enters into dining room sits down on chair and starts working on laptop.",
+        "index": 1455,
+        "category": "chair_door_laptop_table"
+    },
+    {
+        "prompts": "A person takes a box and dishes out the pantry then opens the box.",
+        "index": 420,
+        "category": "box_cabinet_cupboard_dish_door_floor_food_plate_shelf"
+    },
+    {
+        "prompts": "The person turns on a light and then works at washing a shelf.",
+        "index": 1007,
+        "category": "closet_cabinet_cup_glass_bottle_dish_light_shelf_table"
+    },
+    {
+        "prompts": "One person is holding a bag of groceries watching as a second person is dressing into a coat from a wardrobe.",
+        "index": 171,
+        "category": "bag_clothes_winter_coat"
+    },
+    {
+        "prompts": "A person is cooking at the stove. The person takes a paper towel from the table and sneezes into it.",
+        "index": 5,
+        "category": "food_pot_spoon_stove_table_towel"
+    },
+    {
+        "prompts": "A person stands at the bathroom sink, splashing water on their face to wake them up. They look behind them to the open doorway and close the door.",
+        "index": 410,
+        "category": "door_hands_sink_water"
+    },
+    {
+        "prompts": "A person is sitting as a desk in the bedroom. The person takes a tissue from a tissue box, and sneezes into it.",
+        "index": 1582,
+        "category": "box_chair_desk_mirror_table_tissue"
+    },
+    {
+        "prompts": "A person is in the dining room at the table with a glass and a person is standing pouring something in it.",
+        "index": 972,
+        "category": "cup_dish_glass_something_table"
+    },
+    {
+        "prompts": "A person wrapped in a blanket begins tidying their entryway. They wipe a mirror with a towel and leave.",
+        "index": 1261,
+        "category": "blanket_door_mirror_rag_towel"
+    },
+    {
+        "prompts": "A person is drinking coffee and eating food. They finish eating and begin tidying the area around them and then take some medicine.",
+        "index": 612,
+        "category": "coffee_food_medicine"
+    },
+    {
+        "prompts": "One person with a cup of coffee throws some food down on a desk by the door, then eats.",
+        "index": 1217,
+        "category": "cup_dish_floor_food_glass_sandwich_steps"
+    },
+    {
+        "prompts": "A person in the entryway is working on something on their phone. They start throwing some clothes at another person who is watching them oddly.",
+        "index": 863,
+        "category": "blanket_clothes_doorway_floor_phone_pillow_something_towel"
+    },
+    {
+        "prompts": "A person is putting a glass on a bedside shelf.  The person is playing with the switch for the light.",
+        "index": 517,
+        "category": "chair_dish_glass_light_shelf_sofa_couch_table"
+    },
+    {
+        "prompts": "Upon awakening in the night, the person takes their pillow and blanket to the stairs so they can spend the rest of the night watching the front door.",
+        "index": 259,
+        "category": "blanket_floor_light_pillow_stairs_towel"
+    },
+    {
+        "prompts": "The person is lying on the bed and then awakening when the other person turns on a light in the bedroom.",
+        "index": 1393,
+        "category": "bed_blanket_doorway_light"
+    },
+    {
+        "prompts": "A person is opening their wardrobe and taking things out of it. Then, standing, the person takes a book from the wardrobe and opens it.",
+        "index": 867,
+        "category": "book_closet_clothes_door_floor_shelf_shoe_wardrobe"
+    },
+    {
+        "prompts": "A person is holding food over a chair, then the person starts closing the cabinet and leaves the room.",
+        "index": 348,
+        "category": "cabinet_cup_glass_bottle_door_food_groceries_shelf"
+    },
+    {
+        "prompts": "A person is laughing as they clean using a vacuum in a walk-in closet. The person sneezes and wipes their face with a towel.",
+        "index": 364,
+        "category": "floor_towel_vacuum"
+    },
+    {
+        "prompts": "One person snuggles a pillow and a blanket, then suddenly awakens and starts working with a vacuum.",
+        "index": 155,
+        "category": "bag_blanket_floor_object_vacuum"
+    },
+    {
+        "prompts": "A person awakens in a kitchen holding a phone and sitting at a table.",
+        "index": 1500,
+        "category": "chair_desk_phone_table"
+    },
+    {
+        "prompts": "A person is holding a sandwich and snuggling a pillow.",
+        "index": 1188,
+        "category": "bread_food_pillow_sandwich"
+    },
+    {
+        "prompts": "A person is watching a video on their phone. They smile and take a drink from a glass.",
+        "index": 506,
+        "category": "cup_dish_glass_phone_shelf"
+    },
+    {
+        "prompts": "A person rattles a doorknob and smiles. The stop, walk a few feet away and pick up a box from a table.",
+        "index": 1716,
+        "category": "box_doorknob_table"
+    },
+    {
+        "prompts": "A person fixes the crooked shelf by the door before leaving the study.",
+        "index": 1476,
+        "category": "bookshelf_door"
+    },
+    {
+        "prompts": "Person is washing dust of desk. Another person is playing games on laptop.",
+        "index": 922,
+        "category": "bed_desk_game_laptop_shelf_sofa_couch_table_towel"
+    },
+    {
+        "prompts": "A person is working on their laptop. Another person comes in carrying a bag of groceries. They set the groceries down and start cooking.",
+        "index": 335,
+        "category": "bag_beans_doorway_food_groceries_laptop_table"
+    },
+    {
+        "prompts": "A person is sitting in their study on a sofa laughing at a movie. The person is eating a plate of food and drinking a glass of water.",
+        "index": 121,
+        "category": "cup_dish_food_laptop_sofa_television"
+    },
+    {
+        "prompts": "A person is working on homework at a desk. The person pauses and drinks from a glass of water.",
+        "index": 1312,
+        "category": "cup_desk_floor_glass_homework_paper_table_water"
+    },
+    {
+        "prompts": "A person sits in the entryway, eating from a box of food.",
+        "index": 546,
+        "category": "box_chair_cup_glass_bottle_dish_floor_food"
+    },
+    {
+        "prompts": "A person is seen holding a towel, opening their closet door. The person then begins working on taking things out and walking out the doorway.",
+        "index": 249,
+        "category": "bag_closet_clothers_clothes_door_floor_towel"
+    }
+]

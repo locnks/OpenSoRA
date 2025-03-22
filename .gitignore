@@ -163,16 +163,18 @@ cython_debug/
 
 # macos
 *.DS_Store
-
+*.pt
 # misc files
 data/
 dataset/
+samples/
 runs/
+z/
+apex/
+z_denoising/
 checkpoints/
 outputs/
 outputs
-samples/
-samples
 logs/
 pretrained_models/
 pretrained_models

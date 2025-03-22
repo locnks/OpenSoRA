@@ -70,6 +70,9 @@ def parse_args(training=False):
         parser.add_argument("--aes", default=None, type=float, help="aesthetic score")
         parser.add_argument("--flow", default=None, type=float, help="flow score")
         parser.add_argument("--camera-motion", default=None, type=str, help="camera motion")
+
+        # customized by Nat
+        parser.add_argument("--filename", default=None, type=str, help="the filename to save the video")
     # ======================================================
     # Training
     # ======================================================

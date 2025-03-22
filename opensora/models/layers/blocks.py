@@ -1,5 +1,4 @@
-# This source code is licensed under the license found in the
-# LICENSE file in the root directory of this source tree.
+print# This source code is licensed under the license found in t LICENSE file in the root directory of this source tree.
 # --------------------------------------------------------
 # References:
 # PixArt: https://github.com/PixArt-alpha/PixArt-alpha
@@ -10,7 +9,9 @@
 # --------------------------------------------------------
 
 import functools
+import sys
 import math
+from datetime import datetime
 from typing import Optional
 
 import numpy as np
@@ -22,7 +23,8 @@ import torch.utils.checkpoint
 import xformers.ops
 from einops import rearrange
 from timm.models.vision_transformer import Mlp
-
+from opensora.models.layers.fope_paper import get_fope_paper_fourier_embedding, get_fope_paper_rotary_embedding
+from opensora.models.layers.riflex_paper import get_1d_rotary_pos_embed_riflex
 from opensora.acceleration.communications import all_to_all, split_forward_gather_backward
 from opensora.acceleration.parallel_states import get_sequence_parallel_group
 
@@ -67,6 +69,7 @@ def modulate(norm_func, x, shift, scale):
     return x
 
 
+
 def t2i_modulate(x, shift, scale):
     return x * (1 + scale) + shift
 
@@ -74,8 +77,6 @@ def t2i_modulate(x, shift, scale):
 # ===============================================
 # General-purpose Layers
 # ===============================================
-
-
 class PatchEmbed3D(nn.Module):
     """Video to Patch Embedding.
 
@@ -102,6 +103,8 @@ class PatchEmbed3D(nn.Module):
         self.embed_dim = embed_dim
 
         self.proj = nn.Conv3d(in_chans, embed_dim, kernel_size=patch_size, stride=patch_size)
+        # print(f"Nat: conv3d configuration in_chans={in_chans} embed_dim={embed_dim} kernel_size={patch_size} patch_size={patch_size}")
+        # Nat: conv3d configuration in_chans=4 embed_dim=1152 kernel_size=[1, 2, 2] patch_size=[1, 2, 2]
         if norm_layer is not None:
             self.norm = norm_layer(embed_dim)
         else:
@@ -117,9 +120,16 @@ class PatchEmbed3D(nn.Module):
             x = F.pad(x, (0, 0, 0, self.patch_size[1] - H % self.patch_size[1]))
         if D % self.patch_size[0] != 0:
             x = F.pad(x, (0, 0, 0, 0, 0, self.patch_size[0] - D % self.patch_size[0]))
-
+        # print(f"Nat: D={D}, H={H}, W={W}, self.path_size={self.patch_size} x.shape={x.shape}")
+        # Nat: D=30, H=90, W=160, self.path_size=[1, 2, 2] x.shape=torch.Size([2, 4, 30, 90, 160])
+        # torch.save(x, "/home/stud/ghuang/Open-Sora/before_x.pt")
         x = self.proj(x)  # (B C T H W)
+        # torch.save(x, "/home/stud/ghuang/Open-Sora/x.pt")
+        # print(f"Nat: after 3d convolution, x={x.shape}")
+        # Nat: after 3d convolution, x=torch.Size([2, 1152, 30, 45, 80])
         if self.norm is not None:
+            # print(f"Nat: going through normalization")
+            # not going through normalization
             D, Wh, Ww = x.size(2), x.size(3), x.size(4)
             x = x.flatten(2).transpose(1, 2)
             x = self.norm(x)
@@ -163,11 +173,17 @@ class Attention(nn.Module):
         if rope is not None:
             self.rope = True
             self.rotary_emb = rope
-        
+            # print(f"Nat: self.rotary_emb.shape={self.rotary_emb.shape}")
+            # torch.save(self.rotary_emb, "/home/stud/ghuang/Open-Sora/z_rotary_emb.pt")
+
         self.is_causal = False
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         B, N, C = x.shape
+        # print(f"B={B}, N={N}, C={C}")
+        # B=60, N=3600, C=1152
+        # or
+        # B=7200, N=30, C=1152 => T=30, C=1152, batch_size=2, spatial=45x80=3600
         # flash attn is not memory efficient for small sequences, this is empirical
         enable_flash_attn = self.enable_flash_attn and (N > B)
         qkv = self.qkv(x)
@@ -175,6 +191,9 @@ class Attention(nn.Module):
 
         qkv = qkv.view(qkv_shape).permute(2, 0, 3, 1, 4)
         q, k, v = qkv.unbind(0)
+        # print(f"query.shape={q.shape}, key.shape={k.shape}, value.shape={v.shape}")
+        # spatial block: query.shape=torch.Size([60, 16, 3600, 72]), key.shape=torch.Size([60, 16, 3600, 72]), value.shape=torch.Size([60, 16, 3600, 72])                                                                                                       
+        # temporal block: query.shape=torch.Size([7200, 16, 30, 72]), key.shape=torch.Size([7200, 16, 30, 72]), value.shape=torch.Size([7200, 16, 30, 72]) 
         if self.qk_norm_legacy:
             # WARNING: this may be a bug
             if self.rope:
@@ -182,14 +201,43 @@ class Attention(nn.Module):
                 k = self.rotary_emb(k)
             q, k = self.q_norm(q), self.k_norm(k)
         else:
+            # the condition goes into here
             q, k = self.q_norm(q), self.k_norm(k)
             if self.rope:
-                q = self.rotary_emb(q)
-                k = self.rotary_emb(k)
+                # print(q.shape, k.shape)
+                # torch.Size([7200, 16, 30, 72]) torch.Size([7200, 16, 30, 72])
+                # q = self.rotary_emb(q)
+                # k = self.rotary_emb(k)
+                
+                # print(q.shape, k.shape)
+                # q = get_fope_paper_rotary_embedding(q)
+                # k = get_fope_paper_rotary_embedding(k)
 
-        if enable_flash_attn:
+                q = get_fope_paper_fourier_embedding(q)
+                k = get_fope_paper_fourier_embedding(k)
+
+                # freqs_array = get_1d_rotary_pos_embed_riflex(72, q.shape[2], 10000, True, None, None)
+                # q = self.rotary_emb(q, freqs_array=freqs_array)
+                # k = self.rotary_emb(k, freqs_array=freqs_array)
+
+                # with open("/home/stud/ghuang/Open-Sora/causal_mask_ratio", "r") as f:
+                #     content = f.read()
+                #     content = content.split('-=-')
+                #     embedding_type = content[4]
+
+                # if embedding_type == "rope":
+                #     q = get_fope_paper_rotary_embedding(q)
+                #     k = get_fope_paper_rotary_embedding(k)
+                # else:
+                #     q = get_fope_paper_fourier_embedding(q)
+                #     k = get_fope_paper_fourier_embedding(k)
+
+        if enable_flash_attn: # spatial block is using flash attention
             from flash_attn import flash_attn_func
-
+            # print(f"Using flash attention, using causal mask={self.is_causal}, softmax scale={self.scale}, self.training={self.training}")
+            # Using flash attention, using causal mask=False, softmax scale=0.11785113019775792, self.training=False
+            # Using flash attention, using causal mask=False
+            # it is using flash attention
             # (B, #heads, N, #dim) -> (B, N, #heads, #dim)
             q = q.permute(0, 2, 1, 3)
             k = k.permute(0, 2, 1, 3)
@@ -202,15 +250,79 @@ class Attention(nn.Module):
                 softmax_scale=self.scale,
                 causal=self.is_causal,
             )
+
+            # print(f"q.permute.shape = {q.permute(0, 2, 1, 3).shape}, k.permute.shape={k.permute(0, 2, 1, 3).shape}")
+            # q.permute.shape = torch.Size([60, 16, 3600, 72]), k.permute.shape=torch.Size([60, 16, 3600, 72]) 
+            # here the spatial causal mask should not be added, as it would only influence the cross attention of each single frame
+            # what we want is actually restricting the information leakage across frames
+
+            # spatial_causal_mask = torch.full((60, 16, 3600, 3600), float('-inf'), dtype=torch.bfloat16, device="cuda")
+            # spatial_causal_mask[:, :, :1800, :1800] = 0
+            # spatial_causal_mask[:, :, 1800:, 1800:] = 0
+
+            # DONE: whether the error would accumulate after so many blocks and layers' computation of scaled_dot_product_attention
+            # here, the causal mask is not not added on temporal attention
+            # we can't achieve the result
+            # DONE: think about which dimension we should add the causal mask, td, or block level, or temporal block, etc.
+
+            # hidden_states = F.scaled_dot_product_attention(
+                # q.permute(0, 2, 1, 3), k.permute(0, 2, 1, 3), v.permute(0, 2, 1, 3), attn_mask=spatial_causal_mask, dropout_p=0.0, is_causal=False, scale=self.scale
+            # )
+
+            # print(hidden_states.shape, hidden_states.permute(0, 2, 1, 3).shape)
+            # torch.Size([60, 16, 3600, 72]) torch.Size([60, 3600, 16, 72])
+
+            # hidden_states = hidden_states.permute(0, 2, 1, 3)
+
+            # print("the shape of the tensor", x.shape, hidden_states.shape)
+            # print("Max difference:", torch.max(torch.abs(x - hidden_states)), "Mean value difference:", torch.mean(torch.abs(x - hidden_states)))
+            # x = hidden_states
         else:
+            # print("Not enabling flash attention...") temporal block is not using flash attention
             dtype = q.dtype
             q = q * self.scale
             attn = q @ k.transpose(-2, -1)  # translate attn to float32
             attn = attn.to(torch.float32)
             if self.is_causal:
+                print("Using causal mask in self-attention...")
                 causal_mask = torch.tril(torch.ones_like(attn), diagonal=0)
+                # Returns the lower triangular part of the matrix (2-D tensor) or batch
+                # of matrices input, the other elements of the result tensor out are set to 0.
+                # The argument diagonal controls which diagonal to consider. If diagonal = 0, 
+                # all elements on and below the main diagonal are retained
                 causal_mask = torch.where(causal_mask.bool(), 0, float('-inf'))
                 attn += causal_mask
+            # print(attn.shape)
+            # torch.Size([7200, 16, 30, 30])
+            temporal_causal_mask = torch.full(attn.shape, float('-inf'), dtype=torch.bfloat16, device="cuda")
+            td = attn.shape[2]
+            temporal_causal_mask[:, :, :td // 2, :td // 2] = 0
+            temporal_causal_mask[:, :, td // 2:, td // 2:] = 0
+            # add fusion mask
+            # leakage mask
+            # temporal_causal_mask[:, :, 16:, :15] = 0
+            # temporal_causal_mask[:, :, :14, 15:] = 0
+
+            # rec 15 mask
+            # temporal_causal_mask[:, :, 15:25, :15] = 0
+            # temporal_causal_mask[:, :, 5:15, 15:] = 0
+
+            # rotated_rec_mask
+            # temporal_causal_mask = torch.full((7200, 16, 30, 30), float('-inf'), dtype=torch.bfloat16, device="cuda")
+            # temporal_causal_mask[:, :, :15, 5:] = 0
+            # temporal_causal_mask[:, :, 15:, :25] = 0
+
+            # rec mask
+            # temporal_causal_mask[:, :, 15:20, :15] = 0
+            # temporal_causal_mask[:, :, 10:15, 15:] = 0
+
+            # rec 10 mask
+            # temporal_causal_mask[:, :, 15:20, 5:15] = 0
+            # temporal_causal_mask[:, :, 10:15, 15:25] = 0
+
+            # enable temporal causal mask
+            # attn += temporal_causal_mask
+
             attn = attn.softmax(dim=-1)
             attn = attn.to(dtype)  # cast back attn to original dtype
             attn = self.attn_drop(attn)
@@ -461,6 +573,8 @@ class MultiHeadCrossAttention(nn.Module):
         self.kv_linear = nn.Linear(d_model, d_model * 2)
         self.attn_drop = nn.Dropout(attn_drop)
         self.proj = nn.Linear(d_model, d_model)
+        # print(f"Nat: multheadcross attention d_model={d_model}")
+        # Nat: multheadcross attention d_model=1152
         self.proj_drop = nn.Dropout(proj_drop)
 
     def forward(self, x, cond, mask=None):
@@ -471,14 +585,116 @@ class MultiHeadCrossAttention(nn.Module):
         kv = self.kv_linear(cond).view(1, -1, 2, self.num_heads, self.head_dim)
         k, v = kv.unbind(2)
 
+        # print(f"Nat: multiheadcrossattention x.shape {x.shape} cond.shape {cond.shape} heads {self.num_heads} head_dim {self.head_dim}")
+        # print(f"Nat: multiheadcrossattention query {q.shape} key {k.shape} values {v.shape}")
+        # Nat: multiheadcrossattention x.shape torch.Size([2, 28800, 1152]) cond.shape torch.Size([1, 42, 1152]) heads 16 head_dim 72
+        # Nat: multiheadcrossattention query torch.Size([1, 57600, 16, 72]) key torch.Size([1, 42, 16, 72]) values torch.Size([1, 42, 16, 72])
+        # notice that the 57600=28800*2 is because the batch size is 2, also, 42 means the prompt tokens length is 21, ie, 42/2
+        # here the 28800=2*90*160, spatial locations size 90*160
+        # the 2 is related to num_seconds, for num_second=4, it is 2. For num_second_8, it is 4. The query dimension is always 2xthe dimension of x because batch_size is 2.
+        # the 42 is the number of tokens of the prompt.
         attn_bias = None
         if mask is not None:
-            attn_bias = xformers.ops.fmha.BlockDiagonalMask.from_seqlens([N] * B, mask)
-        x = xformers.ops.memory_efficient_attention(q, k, v, p=self.attn_drop.p, attn_bias=attn_bias)
+            with open("/home/stud/ghuang/Open-Sora/causal_mask_ratio", "r") as f:
+                content = f.read()
+                content = content.split('-=-')
+                prompt_key = content[0]
+                token_boundary = int(content[1])
+                denoising_step_ratio = float(content[3])
+                denoising_step_condition = content[2]
 
+            half_video = N // 2
+            half_tokens = token_boundary
+            q_attn_bias_input = [half_video] * (B * 2)
+            kv_attn_bias_input = [half_tokens, mask[0] - half_tokens, half_tokens, mask[0] - half_tokens]
+            attn_bias = xformers.ops.fmha.BlockDiagonalMask.from_seqlens(q_attn_bias_input, kv_attn_bias_input)
+            with open("/home/stud/ghuang/Open-Sora/denosing_step_information", "r") as f:
+                denoising_step = int(f.read())
+                if denoising_step_condition == "_causal_mask_experiment_2_":
+                    if denoising_step >= denoising_step_ratio * 30:
+                        attn_bias = xformers.ops.fmha.BlockDiagonalMask.from_seqlens([N] * B, mask)
+                else:
+                    if denoising_step < denoising_step_ratio * 30:
+                        attn_bias = xformers.ops.fmha.BlockDiagonalMask.from_seqlens([N] * B, mask)
+            attn_bias = xformers.ops.fmha.BlockDiagonalMask.from_seqlens([N] * B, mask)
+            # print(f"N={N}, B={B}, mask={mask}") # the mask shape is token_lenght//2
+            # N=108000, B=2, mask=[16, 16]
+            # print(f"q={q.shape}, k={k.shape}, v={v.shape}")
+            # q=torch.Size([1, 216000, 16, 72]), k=torch.Size([1, 32, 16, 72]), v=torch.Size([1, 32, 16, 72])  
+            # print(f"Nat: attention_bias shape is {attn_bias}")
+            # Nat: attention_bias shape is BlockDiagonalMask(q_seqinfo=_SeqLenInfo(seqstart=tensor([
+            # 0, 108000, 216000], dtype=torch.int32), max_seqlen=108000, min_seqlen=108000, seqstart_py=[0,
+            # 108000, 216000]), k_seqinfo=_SeqLenInfo(seqstart=tensor([ 0, 16, 32], dtype=torch.int32),
+            # max_seqlen=16, min_seqlen=16, seqstart_py=[0, 16, 32]), _batch_sizes=None)
+        x = xformers.ops.memory_efficient_attention(q, k, v, p=self.attn_drop.p, attn_bias=attn_bias)
+        # print(f"Nat: after multiheadcrossattention x {x.shape}")
+        # Nat: after multiheadcrossattention x torch.Size([1, 216000, 16, 72])
+        # Nat: after multiheadcrossattention x torch.Size([1, 57600, 16, 72])
+        # equivalent code: (ref https://github.com/facebookresearch/xformers/blob/9a59df217473fc949871792a5c5fb7f274335959/xformers/ops/fmha/__init__.py#L224)
+        # scale = 1.0 / query.shape[-1] ** 0.5
+        # query = query * scale
+        # query = query.transpose(1, 2)
+        # key = key.transpose(1, 2)
+        # attn = query @ key.transpose(-2, -1)
+        # if attn_bias is not None:
+        #     attn = attn + attn_bias
+        # attn = attn.softmax(-1)
+        # attn = F.dropout(attn, p)
+        # attn = attn @ value
+        # return attn.transpose(1, 2).contiguous()
+
+        def calculate_attention(query, key, attn_bias, p):
+            scale = 1.0 / query.shape[-1] ** 0.5
+            query = query * scale
+            query = query.transpose(1, 2)
+            key = key.transpose(1, 2)
+            attn = query @ key.transpose(-2, -1)
+            # print(f"Nat: here the attn.shape is {attn.shape} query.shape {query.shape} key.transpose.shape {key.transpose(-2, -1).shape}")
+            # Nat: here the attn.shape is torch.Size([1, 16, 216000, 32]) query.shape torch.Size([1, 16, 216000, 72]) key.transpose.shape torch.Size([1, 16, 72, 32])
+            # for tensor that are higher than 2-dimensions
+            # the last two dimension are treated as matrices while the other dimensions are treated
+            # like batches
+            # 1. If the dimensions are equal, they remain in the output.
+            # 2. If one of the dimensions is 1, it's "stretched" (broadcasted) to match the other dimension.
+            # 3. If neither dimension is 1 and they are not equal, you get a broadcasting error.
+            if attn_bias is not None:
+               attn = attn + attn_bias.materialize(attn.shape).to(attn.device)
+            # print(f"Nat: before softmax the attention={attn.shape}")
+            attn = attn.softmax(-1)
+            attn = F.dropout(attn, p)
+            # here, the attn.shape is torch.Size([1, 16, 216000, 32]) for 1 card
+            return attn
+        # attention.shape torch.Size([1, 16, 216000, 32])
+
+        # -=- uncomment this to calculate intermediate attention
+        # attention = calculate_attention(q, k, attn_bias, self.attn_drop.p)
+        # attention = attention[0]
+        # attention = attention.mean(dim=0)
+
+
+        # with open("/home/stud/ghuang/Open-Sora/tmp", "r") as f:
+        #     content = f.read()
+        #     content = content.split("-")
+        #     temporal_block_condition = content[0]
+        #     temporal_block_ratio = float(content[1])
+        # torch.save(attention, f"/mnt/data8/liao/ghuang/visualization/attn_maps_egg_rock_remove_temporal_block_rope_{temporal_block_condition}_{str(temporal_block_ratio)}/" + datetime.now().strftime("%H-%M-%S-%f") + ".pt")
+
+        # print(f"Nat: multiheadcrossattention calculated attention shape {attention.shape}")
+        # 4 cards: Nat: multiheadcrossattention calculated attention shape torch.Size([1, 16, 57600, 42])
+        # 1 card: Nat: multiheadcrossattention calculated attention shape torch.Size([1, 16, 216000, 42])
+        # print(f"Nat: inside multiheadcrossattention, B={B} N={N} C={C} mask={mask}")
+        # Nat: inside multiheadcrossattention, B=2 N=108000 C=1152 mask=[16, 16]
         x = x.view(B, -1, C)
+        # print(f"Nat: before view x.shape={x.shape}")
+        # Nat: before view x.shape=torch.Size([2, 108000, 1152])
         x = self.proj(x)
+        # print(f"Nat: after proj x.shape={x.shape}")
+        # Nat: after proj x.shape=torch.Size([2, 108000, 1152])
         x = self.proj_drop(x)
+        # print(f"Nat: multiheadcrossattention output x {x.shape}")
+        # Nat: multiheadcrossattention output x torch.Size([2, 28800, 1152])
+        # 16 heads, each head dimension is 72, so 1152. But notice, that the 1152 is the input dimension
+        # which is designed to be able to be splitted evenly by 16 heads.
         return x
 
 
@@ -501,6 +717,8 @@ class SeqParallelMultiHeadCrossAttention(MultiHeadCrossAttention):
         # query/value: img tokens; key: condition; mask: if padding tokens
         sp_group = get_sequence_parallel_group()
         sp_size = dist.get_world_size(sp_group)
+        # print(f"Nat: sp_group={sp_group} sp_size={sp_size}")
+        # the sp_size=4 when using 4 cards
         B, SUB_N, C = x.shape  # [B, TS/p, C]
         N = SUB_N * sp_size
 
@@ -511,27 +729,60 @@ class SeqParallelMultiHeadCrossAttention(MultiHeadCrossAttention):
         kv = split_forward_gather_backward(kv, get_sequence_parallel_group(), dim=3, grad_scale="down")
         k, v = kv.unbind(2)
 
+        # print(f"Nat: before all_to_all q.shape {q.shape} k.shape {k.shape} v.shape {v.shape}")
+        # Nat: before all_to_all q.shape torch.Size([2, 28800, 16, 72]) k.shape torch.Size([1, 42, 4, 72]) v.shape torch.Size([1, 42, 4, 72])
+
         # apply all_to_all to gather sequence and split attention heads
         q = all_to_all(q, sp_group, scatter_dim=2, gather_dim=1)
+        # # Suppose you have a tensor of shape [batch_size, 128, 256]
+        # With 4 processes, each process initially has [batch_size, 32, 256]
+        # After all_to_all, each process will have [batch_size, 128, 256]
+        # combining all processes together, it will be 128*4=512, which is 4 times larger than original 128
+        # print(f"Nat: after all_to_all q.shape {q.shape} k.shape {k.shape} v.shape {v.shape}")
+        # Nat: after all_to_all q.shape torch.Size([2, 115200, 4, 72]) k.shape torch.Size([1, 42, 4, 72]) v.shape torch.Size([1, 42, 4, 72])
 
         q = q.view(1, -1, self.num_heads // sp_size, self.head_dim)
         k = k.view(1, -1, self.num_heads // sp_size, self.head_dim)
         v = v.view(1, -1, self.num_heads // sp_size, self.head_dim)
 
+        # print(f"Nat: seqparallelmultiheadcrossattention x.shape {x.shape} cond.shape {cond.shape}")
+        # Nat: seqparallelmultiheadcrossattention x.shape torch.Size([2, 28800, 1152]) cond.shape torch.Size([1, 42, 1152])
+        # print(f"Nat: seqparallelmultiheadcrossattention query {q.shape} key {k.shape} values {v.shape}")
+        # Nat: seqparallelmultiheadcrossattention query torch.Size([1, 230400, 4, 72]) key torch.Size([1, 42, 4, 72]) values torch.Size([1, 42, 4, 72])
+        # remeber the input shape for STDiT is (2,4,30,90,160) where 4 is the channel, 30 is the denoising steps
+        # and 16*90*160=230400, but where does 16 come from?
+        # first of all, batch_size=2, so 2*90*60=28800. Then in temporal, the size is 57600. Here
+        # the num_seconds=4, so the dimension for spatial is 57600*4=230400 while for temporal it is 57600.
+        # here the (4,72), the last two dimensions are self.num_heads, self.head_dim
         # compute attention
         attn_bias = None
         if mask is not None:
             attn_bias = xformers.ops.fmha.BlockDiagonalMask.from_seqlens([N] * B, mask)
-        x = xformers.ops.memory_efficient_attention(q, k, v, p=self.attn_drop.p, attn_bias=attn_bias)
 
+        def calculate_attention(query, key, attn_bias, p):
+            scale = 1.0 / query.shape[-1] ** 0.5
+            query = query * scale
+            query = query.transpose(1, 2)
+            key = key.transpose(1, 2)
+            attn = query @ key.transpose(-2, -1)
+            # if attn_bias is not None:
+            #    attn = attn + attn_bias
+            attn = attn.softmax(-1)
+            attn = F.dropout(attn, p)
+            return attn
+        attention = calculate_attention(q, k, attn_bias, self.attn_drop.p)
+        # print(f"Nat: sequence parallel multihead cross attention shape={attention.shape}")
+        x = xformers.ops.memory_efficient_attention(q, k, v, p=self.attn_drop.p, attn_bias=attn_bias)
         # apply all to all to gather back attention heads and scatter sequence
         x = x.view(B, -1, self.num_heads // sp_size, self.head_dim)
         x = all_to_all(x, sp_group, scatter_dim=1, gather_dim=2)
-
+        # print(f"Nat: after all_to_all x.shape={x.shape}")
         # apply output projection
         x = x.view(B, -1, C)
         x = self.proj(x)
         x = self.proj_drop(x)
+        # print(f"Nat: seqparallelmultiheadcrossattention output x {x.shape}")
+        # Nat: seqparallelmultiheadcrossattention output x torch.Size([2, 28800, 1152])
         return x
 
 
@@ -586,9 +837,10 @@ class T2IFinalLayer(nn.Module):
         x = t2i_modulate(self.norm_final(x), shift, scale)
         if x_mask is not None:
             shift_zero, scale_zero = (self.scale_shift_table[None] + t0[:, None]).chunk(2, dim=1)
+            # modulation: x_modulated​=scale⋅x_normalized​+shift
             x_zero = t2i_modulate(self.norm_final(x), shift_zero, scale_zero)
             x = self.t_mask_select(x_mask, x, x_zero, T, S)
-        x = self.linear(x)
+        x = self.linear(x) # hidden_size C=1152, num_patch=4, out_channels=8
         return x
 
 
@@ -609,7 +861,10 @@ class TimestepEmbedder(nn.Module):
             nn.SiLU(),
             nn.Linear(hidden_size, hidden_size, bias=True),
         )
+        self.hidden_size = hidden_size
         self.frequency_embedding_size = frequency_embedding_size
+        # print(f"Nat: frequency_embedding_size={self.frequency_embedding_size} hidden_size={self.hidden_size}")
+        # Nat: frequency_embedding_size=256 hidden_size=1152
 
     @staticmethod
     def timestep_embedding(t, dim, max_period=10000):
@@ -623,12 +878,19 @@ class TimestepEmbedder(nn.Module):
         """
         # https://github.com/openai/glide-text2im/blob/main/glide_text2im/nn.py
         half = dim // 2
+        # print(f"Nat: the dim={dim}")
+        # Nat: the dim=256
         freqs = torch.exp(-math.log(max_period) * torch.arange(start=0, end=half, dtype=torch.float32) / half)
         freqs = freqs.to(device=t.device)
         args = t[:, None].float() * freqs[None]
+        # print(f"Nat: args={args} args.shape={args.shape}")
+        # args.shape=torch.Size([2, 128])
         embedding = torch.cat([torch.cos(args), torch.sin(args)], dim=-1)
         if dim % 2:
             embedding = torch.cat([embedding, torch.zeros_like(embedding[:, :1])], dim=-1)
+        # print(f"Nat embedding={embedding} embedding.shape={embedding.shape}")
+        # embedding.shape=torch.Size([2, 256])
+        # torch.save(embedding, "/home/stud/ghuang/Open-Sora/z_timestep_embedding" + datetime.now().strftime("%H-%M-%S-%f") + ".pt")
         return embedding
 
     def forward(self, t, dtype):
@@ -755,13 +1017,15 @@ class PositionEmbedding2D(nn.Module):
     def __init__(self, dim: int) -> None:
         super().__init__()
         self.dim = dim
+        # self.dim=1152
         assert dim % 4 == 0, "dim must be divisible by 4"
         half_dim = dim // 2
-        inv_freq = 1.0 / (10000 ** (torch.arange(0, half_dim, 2).float() / half_dim))
+        inv_freq = 1.0 / (10000 ** (torch.arange(0, half_dim, 2).float() / half_dim)) # 10000^(-x), x = [0, 0.045, 0.9, ..., 1]
         self.register_buffer("inv_freq", inv_freq, persistent=False)
+        print(f"Nat: positionalembedding2d inv_freq={inv_freq}")
 
     def _get_sin_cos_emb(self, t: torch.Tensor):
-        out = torch.einsum("i,d->id", t, self.inv_freq)
+        out = torch.einsum("i,d->id", t, self.inv_freq) # inv_freq.shape=(288), t.shape=(3600)
         emb_cos = torch.cos(out)
         emb_sin = torch.sin(out)
         return torch.cat((emb_sin, emb_cos), dim=-1)
@@ -775,22 +1039,30 @@ class PositionEmbedding2D(nn.Module):
         w: int,
         scale: float = 1.0,
         base_size: Optional[int] = None,
-    ):
-        grid_h = torch.arange(h, device=device) / scale
-        grid_w = torch.arange(w, device=device) / scale
+    ): # h=45, w=80, base_size=round((H*W)**0.5)
+        grid_h = torch.arange(h, device=device) / scale # length 45
+        grid_w = torch.arange(w, device=device) / scale # length 80
         if base_size is not None:
             grid_h *= base_size / h
             grid_w *= base_size / w
         grid_h, grid_w = torch.meshgrid(
-            grid_w,
-            grid_h,
+            grid_w, # horizontal axis, the columns
+            grid_h, # vertical axis, the rows
             indexing="ij",
-        )  # here w goes first
+        )  # here w goes first, grid_h, grid_w becomes 45x80 matrix
         grid_h = grid_h.t().reshape(-1)
         grid_w = grid_w.t().reshape(-1)
+        # print(f"Nat: grid_h={grid_h.shape}, grid_w={grid_w.shape}")
+        # Nat: grid_h=torch.Size([3600]), grid_w=torch.Size([3600])
+        # torch.save(grid_h, "/home/stud/ghuang/Open-Sora/z_grid_h.pt")
+        # torch.save(grid_w, "/home/stud/ghuang/Open-Sora/z_grid_w.pt")
         emb_h = self._get_sin_cos_emb(grid_h)
         emb_w = self._get_sin_cos_emb(grid_w)
-        return torch.concat([emb_h, emb_w], dim=-1).unsqueeze(0).to(dtype)
+        positional_embedding = torch.concat([emb_h, emb_w], dim=-1).unsqueeze(0).to(dtype)
+        # print(f"Nat: emd_h.shape={emb_h.shape} emd_w.shape={emb_w.shape} positional_embedding.shape={positional_embedding.shape}")
+        # Nat: emd_h.shape=torch.Size([3600, 576]) emd_w.shape=torch.Size([3600, 576]) positional_embedding.shape=torch.Size([1, 3600, 1152])
+        # torch.save(positional_embedding, "/home/stud/ghuang/Open-Sora/z_positional_embedding" + datetime.now().strftime("%H-%M-%S-%f") + ".pt")
+        return positional_embedding
 
     def forward(
         self,

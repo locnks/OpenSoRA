@@ -1,0 +1,2 @@
+scene_flash_one:
+A bird flies in the sky. The scene then transitioned to a ball rolling on the grassland. Then the scene transitioned to a cat lying in the room.

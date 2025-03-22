@@ -1,5 +1,6 @@
 import os
 import time
+from timeit import default_timer as timer
 from pprint import pformat
 
 import colossalai
@@ -86,10 +87,14 @@ def main():
         ), "resolution and aspect_ratio must be provided if image_size is not provided"
         image_size = get_image_size(resolution, aspect_ratio)
     num_frames = get_num_frames(cfg.num_frames)
+    # opensora/datasets/aspect.py, 4s means 204 frames
 
     # == build diffusion model ==
     input_size = (num_frames, *image_size)
     latent_size = vae.get_latent_size(input_size)
+    print(f"Nat: num_frames {num_frames} input_size {input_size} latent_size {latent_size} image_size {image_size}")
+    # Nat: num_frames 204 input_size (204, 720, 1280) latent_size [60, 90, 160] image_size (720, 1280)
+    # notice the configs/opensora-v1-2/inference/sample.py, the vae, the microframesize=17, where 204/17=12
     model = (
         build_module(
             cfg.model,
@@ -113,6 +118,7 @@ def main():
     # ======================================================
     # == load prompts ==
     prompts = cfg.get("prompt", None)
+    customize_filename = cfg.get("filename", None)
     start_idx = cfg.get("start_index", 0)
     if prompts is None:
         if cfg.get("prompt_path", None) is not None:
@@ -164,6 +170,7 @@ def main():
         # == Iter over number of sampling for one prompt ==
         for k in range(num_sample):
             # == prepare save paths ==
+            start = timer()
             save_paths = [
                 get_save_path_name(
                     save_dir,
@@ -173,6 +180,7 @@ def main():
                     prompt_as_path=prompt_as_path,
                     num_sample=num_sample,
                     k=k,
+                    customize_filename=customize_filename,
                 )
                 for idx in range(len(batch_prompts))
             ]
@@ -230,10 +238,12 @@ def main():
                         segment_start_idx += num_segment
 
             # 2. append score
+            # Nat: the aesthetic score is appended here
+            # whether the score is fixed to be 6.5. Yes, fixed in the configuration.
             for idx, prompt_segment_list in enumerate(batched_prompt_segment_list):
                 batched_prompt_segment_list[idx] = append_score_to_prompts(
                     prompt_segment_list,
-                    aes=cfg.get("aes", None),
+                    aes=cfg.get("aes", None), # this is defined in config folder sample.py, at the bottom line, aes=6.5, a fixed value
                     flow=cfg.get("flow", None),
                     camera_motion=cfg.get("camera_motion", None),
                 )
@@ -263,6 +273,19 @@ def main():
                 torch.manual_seed(1024)
                 z = torch.randn(len(batch_prompts), vae.out_channels, *latent_size, device=device, dtype=dtype)
                 masks = apply_mask_strategy(z, refs, ms, loop_i, align=align)
+                # torch.save(z, "/home/stud/ghuang/Open-Sora/z.pt")
+                # HACK: the z attention map don't have strong periodic pattern
+                # print(masks)
+                # tensor([[1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.,                                                                                                                                      
+        #  1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.]], device='cuda:0') 
+                # print(f"Nat: after applying mask strategy {masks.shape}")
+                # Nat: after applying mask strategy torch.Size([1, 30])
+                # this is the scheduling sample part
+                # print(f"Nat: scheduler started sampling noise with shape {z.shape}...")
+                # the 4 here is the out_channels, and the latent_size is the input size, 30, 60, 90
+                # output sample: Nat: scheduler started sampling noise with shape torch.Size([1, 4, 30, 90, 160])
+                # print(f"Nat: batch_prompts_loop={batch_prompts_loop}")
+                # Nat: batch_prompts_loop=['a girl is riding a bike and the sunshine is bright. aesthetic score: 6.5.']
                 samples = scheduler.sample(
                     model,
                     text_encoder,
@@ -273,7 +296,11 @@ def main():
                     progress=verbose >= 2,
                     mask=masks,
                 )
+                # print(f"Nat: vae started decoding the output... {samples.shape} with dtype={dtype}")
+                # output sample: Nat: vae started decoding the output... torch.Size([1, 4, 30, 90, 160]) with dtype=torch.bfloat16
                 samples = vae.decode(samples.to(dtype), num_frames=num_frames)
+                # print(f"Nat: decoded sample shape {samples.shape} with num_frames={num_frames}")
+                # Nat: decoded sample shape torch.Size([1, 3, 102, 720, 1280])
                 video_clips.append(samples)
 
             # == save samples ==
@@ -295,6 +322,10 @@ def main():
                     if save_path.endswith(".mp4") and cfg.get("watermark", False):
                         time.sleep(1)  # prevent loading previous generated video
                         add_watermark(save_path)
+                    print(f"Video saving information: loop={loop} condition_frame_length={condition_frame_length} video={video.shape}")
+                    # Video saving information: loop=1 condition_frame_length=5 video=torch.Size([3, 102, 720, 1280])
+                    # here the 102 is the num_frames. If you use 4s, the num_frames is mapped to 102.
+            print(f"Time taken {timer() - start} seconds")
         start_idx += len(batch_prompts)
     logger.info("Inference finished.")
     logger.info("Saved %s samples to %s", start_idx, save_dir)

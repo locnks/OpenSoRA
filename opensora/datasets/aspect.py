@@ -485,6 +485,8 @@ NUM_FRAMES_MAP = {
     "8s": 204,
     "16s": 408,
     "32s": 816,
+    "48s": 1224, # -=- newly added
+    "64s": 816*2, # -=- newly added
 }
 
 
